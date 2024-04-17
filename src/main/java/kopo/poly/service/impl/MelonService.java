@@ -21,7 +21,7 @@ import java.util.List;
 @Service
 public class MelonService implements IMelonService {
 
-    private final IMelonMapper meloneMapper; // MongoDB에 저장할 Mapper
+    private final IMelonMapper melonMapper; // MongoDB에 저장할 Mapper
 
     /**
      * 멜론 차트 수집 함수(웹 크롤링)
@@ -78,7 +78,7 @@ public class MelonService implements IMelonService {
         List<MelonDTO> rList = this.doCollect();
 
         // MongoDB에 데이터 저장
-        res = meloneMapper.insertSong(rList, colNm);
+        res = melonMapper.insertSong(rList, colNm);
 
         // 로그 찍기(추후 찍은 로그를 통해 이 함수에 접근했는지 파악하기 용이)
         log.info(this.getClass().getName() + ".collectMelonSong End");
@@ -94,9 +94,116 @@ public class MelonService implements IMelonService {
         // MongoDB에 저장된 컬렉션 이름
         String colNm = "MELON_" + DateUtil.getDateTime("yyyyMMdd");
 
-        List<MelonDTO> rList = meloneMapper.getSongList(colNm); // MongoDB에서 데이터 가져오기
+        List<MelonDTO> rList = melonMapper.getSongList(colNm); // MongoDB에서 데이터 가져오기
 
         log.info(this.getClass().getName() + ".getSongList End");
+
+        return rList;
+    }
+
+    @Override
+    public List<MelonDTO> getSingerSongCnt() throws Exception {
+        log.info(this.getClass().getName() + ".getSingerSongCnt Start!");
+
+        String colNm = "MELON_" + DateUtil.getDateTime("yyyyMMdd");
+
+        List<MelonDTO> rList = melonMapper.getSingerSongCnt(colNm);
+
+        log.info(this.getClass().getName() + ".getSingerSongCnt End!");
+
+        return rList;
+    }
+
+    @Override
+    public List<MelonDTO> getSingerSong(MelonDTO pDTO) throws Exception {
+
+        log.info(this.getClass().getName() + ".getSingerSong Start!");
+
+        // MongoDB에 저장된 컬렉션 이름
+        String colNm = "MELON_" + DateUtil.getDateTime("yyyyMMdd");
+
+        // 결과값
+        List<MelonDTO> rList = null;
+
+        // melen 노래 수집
+        if (this.collectMelonSong() == 1) {
+
+            // 가수 노래 조회하기
+            rList = melonMapper.getSingerSong(colNm, pDTO);
+        }
+        log.info(this.getClass().getName() + ".getSingerSong End!");
+
+        return rList;
+    }
+
+    @Override
+    public int dropCollection() throws Exception {
+
+        log.info(this.getClass().getName() + ".dropCollection Start!");
+
+        int res = 0;
+
+        // MongoDB에 저장된 컬렉션 이름
+        String colNm = "MELON_" + DateUtil.getDateTime("yyyyMMdd");
+
+        // 기존 수집된 멜론top100 수집한 컬렉션 삭제하기
+        res = melonMapper.dropCollection(colNm);
+
+        log.info(this.getClass().getName() + ".dropCollection End!");
+
+        return res;
+    }
+
+    @Override
+    public List<MelonDTO> insertManyField() throws Exception {
+
+        // 로그 찍기(추후 찍은 로그를 통해 이 함수에 접근했는지 파악하기 용이)
+        log.info(this.getClass().getName() + ".insertManyField Start!");
+
+        List<MelonDTO> rList = null; // 변경된 데이터 조회 결과
+
+        // 생성할 컬렉션 명
+        String colNm = "MELON_" + DateUtil.getDateTime("yyyyMMdd");
+
+        // MongoDB에 데이터 저장
+        if (melonMapper.insertManyField(colNm, this.doCollect()) == 1) {
+
+            // 변경된 값을 확인하기 위해 MongoDB로 부터 데이터 조회하기
+            rList = melonMapper.getSongList(colNm);
+        }
+        log.info(this.getClass().getSimpleName() + "insertManyField End");
+
+        return rList;
+
+    }
+    @Override
+    public List<MelonDTO> updateField(MelonDTO pDTO) throws Exception {
+
+        // 로그 찍기(추후 찍은 로그를 통해 이 함수에 접근했는지 파악하기 용이하다.)
+        log.info(this.getClass().getName() + ".updateField Start!");
+
+        List<MelonDTO> rList = null; // 변경된 데이터 조회 결과
+
+        // 수정할 컬렉션
+        String colNm = "MELON_" + DateUtil.getDateTime("yyyyMMdd");
+
+        // 기존 수집된 멜론Top100 수집한 컬렉션 삭제하기
+        melonMapper.dropCollection(colNm);
+
+        // 멜론Top100 수집하기
+        if (this.collectMelonSong() == 1) {
+
+            // 예 : singer 필드에 저장된 '방탄소년단' 값을 'BTS'로 변경하기
+            if (melonMapper.updateField(colNm, pDTO) == 1) {
+
+                // 변경된 값을 확인하기 위해 MongoDB로부터 데이터 조회하기
+                rList = melonMapper.getUpdateSinger(colNm, pDTO);
+
+            }
+        }
+
+        // 로그 찍기(추후 찍은 로그를 통해 이 함수에 접근했는지 파악하기 용이하다.)
+        log.info(this.getClass().getName() + ".updateField End!");
 
         return rList;
     }

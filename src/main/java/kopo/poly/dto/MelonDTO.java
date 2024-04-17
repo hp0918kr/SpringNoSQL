@@ -16,7 +16,7 @@ public record MelonDTO (
     String collectTime, // 수집시간
         String song, // 노래 제목
         String singer, // 가수
-        int singerCount, // 자료에 등록된 가수 별 노래 수
+        int singerCnt, // 자료에 등록된 가수 별 노래 수
         String updateSinger, // 수정할 가수명(mongoDB 필드 수정 교육용)
         String nickname, // 추가될 닉네임(mongoDB 필드 추가 교육용)
         List<String> member, // 추가될 그룹 멤버 이름들(MongoDB 필드 추가 교육용)
